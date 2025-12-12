@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Birthday Countdown — Happy Birthday Vidhu</title>
+  <style>
+    :root{
+      --bg1:#0f172a; --bg2:#0b1220; --accent:#ff5ca8;
+      --card-bg: rgba(255,255,255,0.04);
+      --glass: rgba(255,255,255,0.03);
+      --glass-2: rgba(255,255,255,0.02);
+    }
+    html,body{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial}
+    body{
+      display:grid;place-items:center;background:linear-gradient(135deg,var(--bg1),var(--bg2));
+      overflow:hidden;color:#edf2f7
+    }
+    .scene{width:100%;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;padding:24px;box-sizing:border-box}
+
+    .card{max-width:920px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));backdrop-filter: blur(6px);border-radius:20px;padding:36px 44px;box-shadow: 0 10px 30px rgba(2,6,23,0.6);text-align:center}
+
+    h1{font-size:clamp(20px,4vw,36px);margin:0 0 8px}
+    p.lead{margin:0 0 22px;color:#cbd5e1}
+
+    .countdown{display:flex;gap:18px;justify-content:center;align-items:center}
+    .unit{background:var(--card-bg);padding:18px 22px;border-radius:12px;min-width:96px}
+    .num{font-size:clamp(28px,5vw,56px);font-weight:700;letter-spacing: -1px}
+    .label{font-size:12px;color:#94a3b8;margin-top:6px;text-transform:uppercase}
+
+    .hint{margin-top:18px;color:#94a3b8;font-size:13px}
+
+    /* full-screen celebration overlay */
+    .celebrate{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 20% 20%, rgba(255,92,168,0.08), transparent 10%), radial-gradient(circle at 80% 80%, rgba(0,186,255,0.04), transparent 10%), linear-gradient(180deg, rgba(12,10,30,0.98), rgba(20,8,40,0.98));z-index:999;opacity:0;pointer-events:none;transition:opacity .6s ease}
+    .celebrate.show{opacity:1;pointer-events:auto}
+    .message{max-width:900px;padding:40px;border-radius:18px;text-align:center}
+    .message h2{font-size:clamp(30px,6vw,72px);margin:0 0 8px}
+    .message p{margin:0 0 16px;font-size:18px;color:#e6eef8}
+
+    /* confetti canvas sits below message */
+    canvas#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:998}
+
+    /* small sparkle animation */
+    @keyframes floaty {0%{transform:translateY(0)}50%{transform:translateY(-8px)}100%{transform:translateY(0)}}
+    .spark{display:inline-block;animation:floaty 3s ease-in-out infinite}
+
+    /* responsive */
+    @media (max-width:520px){.card{padding:22px 18px}.unit{min-width:72px;padding:14px}}
+
+    .squirrel-wrapper{position:absolute;left:20px;bottom:24px;pointer-events:none}
+  .squirrel-wrapper svg{width:80px;height:80px;display:block;transform-origin:center bottom;}
+  /* gentle jump + slow horizontal wander */
+  .squirrel-wrapper .idle{animation:hop 1.2s ease-in-out infinite, wander 6s ease-in-out infinite;}
+  @keyframes hop{0%{transform:translateY(0)}50%{transform:translateY(-36px)}100%{transform:translateY(0)}}
+  @keyframes wander{0%{transform:translateX(0)}50%{transform:translateX(10px)}100%{transform:translateX(0)}}
+
+  /* when running to the stage (on celebration) */
+  .squirrel-wrapper.to-stage{transition:transform 0.9s cubic-bezier(.2,.9,.3,1), left 0.9s; left:calc(50% - 40px); bottom:120px}
+  .squirrel-wrapper.to-stage svg{animation:none; transform:translateY(0) scale(1.03) rotate(6deg)}
+  .squirrel-wrapper.stage-dance svg{animation: dance 0.9s infinite;}
+  @keyframes dance{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-8px) rotate(-8deg)}100%{transform:translateY(0) rotate(0)}}
+
+  /* smaller on very small screens */
+  @media (max-width:420px){ .squirrel-wrapper svg{width:60px;height:60px} }
+  /* popper explosion animation */
+  .popper .burst circle{opacity:0;transform:scale(0);transition:opacity .25s ease, transform .25s ease;}
+  .popper .burst circle{opacity:0;transform:scale(0);transition:opacity .25s ease, transform .25s ease;}
+  .popper.explode .burst circle{opacity:1;transform:scale(1.4);} 
+
+  /* spark flash */
+  .popper .spark{opacity:0;transform:scale(0);transform-origin:center;transition:opacity .12s ease, transform .12s ease}
+  .popper.explode .spark{opacity:1;transform:scale(1.6)}
+
+  /* squirrel eye widen + quick jump */
+  .squirrel-wrapper.wide svg g#eyes{transform-origin:34px 40px;transition:transform .12s ease}
+  .squirrel-wrapper.jump svg{animation: hop 0.42s ease-in-out}
+
+</style>
+</style>
+</head>
+<body>
+  <div class="scene">
+    <div class="card" role="region" aria-labelledby="countdownTitle">
+      <h1 id="countdownTitle">Countdown to midnight</h1>
+      <p class="lead">The page will switch at 12:00 AM local time and show the birthday greeting.</p>
+
+      <div class="countdown" aria-live="polite" aria-atomic="true">
+        <div class="unit">
+          <div class="num" id="hours">00</div>
+          <div class="label">Hours</div>
+        </div>
+        <div class="unit">
+          <div class="num" id="minutes">00</div>
+          <div class="label">Minutes</div>
+        </div>
+        <div class="unit">
+          <div class="num" id="seconds">00</div>
+          <div class="label">Seconds</div>
+      <div class="squirrel-wrapper" aria-hidden="true">
+        <!-- inline SVG squirrel (small stylized) -->
+        <svg id="squirrel" viewBox="0 0 140 140" width="100" height="100" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="cartoon squirrel with big eyes holding an acorn">
+          <!-- Cute cartoon squirrel: big eyes, round cheeks, fluffy tail, holding an acorn -->
+          <g transform="translate(10,10)">
+            <!-- body -->
+            <ellipse cx="48" cy="66" rx="26" ry="22" fill="#C57B4A" />
+            <!-- head -->
+            <circle cx="34" cy="44" r="20" fill="#D18A52" />
+            <!-- cheek blush -->
+            <ellipse cx="24" cy="52" rx="5" ry="3" fill="#ffb4aa" opacity="0.9" />
+            <ellipse cx="44" cy="52" rx="5" ry="3" fill="#ffb4aa" opacity="0.9" />
+            <!-- big eyes -->
+            <g id="eyes">
+              <ellipse cx="28" cy="40" rx="7" ry="9" fill="#fff" />
+              <ellipse cx="40" cy="40" rx="7" ry="9" fill="#fff" />
+              <circle cx="28" cy="40" r="3.2" fill="#1b1b1b" />
+              <circle cx="40" cy="40" r="3.2" fill="#1b1b1b" />
+              <!-- cute highlight -->
+              <circle cx="30" cy="37" r="1.2" fill="#fff" opacity="0.95" />
+              <circle cx="42" cy="37" r="1.2" fill="#fff" opacity="0.95" />
+            </g>
+            <!-- nose and smile -->
+            <circle cx="34" cy="48" r="2.4" fill="#4a2b18" />
+            <path d="M28 50 Q34 56 40 50" stroke="#4a2b18" stroke-width="1.4" fill="none" stroke-linecap="round" />
+
+            <!-- ear -->
+            <path d="M18 28 C12 18, 28 12, 32 26" fill="#D18A52" />
+            <path d="M42 26 C46 12, 66 18, 58 30" fill="#C57B4A" opacity="0.9" />
+
+            <!-- front paw holding acorn -->
+            <g id="acorn" class="popper" transform="translate(50,56)">
+              <!-- PARTY POPPER instead of acorn -->
+              <g class="nut">
+                <!-- cone -->
+                <path d="M-10 0 L10 0 L0 22 Z" fill="#ff5ca8" />
+                <!-- stripes -->
+                <path d="M-7 2 L7 2 L0 18 Z" fill="#ffd1e6" opacity="0.9" />
+                <!-- confetti burst -->
+                <g class="burst">
+                <circle cx="-6" cy="-6" r="2" fill="#ffed4a" />
+                <circle cx="4" cy="-10" r="2" fill="#4ae3ff" />
+                <circle cx="10" cy="-4" r="2" fill="#ff8a3d" />
+                <circle cx="-12" cy="-2" r="2" fill="#7dff9a" />
+                </g>
+                <circle cx="-6" cy="-6" r="2" fill="#ffed4a" />
+                <circle cx="4" cy="-10" r="2" fill="#4ae3ff" />
+                <circle cx="10" cy="-4" r="2" fill="#ff8a3d" />
+                <circle cx="-12" cy="-2" r="2" fill="#7dff9a" />
+              </g>
+              <!-- paw behind popper -->
+              <path d="M-8 10 C-12 8, -6 2, -2 6" fill="#D18A52" />
+            </g>
+              <!-- paw behind the nut -->
+              <path d="M-8 10 C-12 8, -6 2, -2 6" fill="#D18A52" />
+            </g>
+
+            <!-- tail (behind body) -->
+            <path d="M72 36 C98 20, 110 76, 74 82 C68 84, 60 78, 64 66 C68 52, 72 44, 72 36 Z" fill="#B56935" opacity="0.95" />
+
+            <!-- little feet -->
+            <ellipse cx="36" cy="86" rx="8" ry="4" fill="#C57B4A" />
+            <ellipse cx="58" cy="86" rx="8" ry="4" fill="#C57B4A" />
+
+            <!-- subtle shadow -->
+            <ellipse cx="46" cy="96" rx="30" ry="6" fill="#000" opacity="0.08" />
+
+            <!-- make the nut gently bob and rotate using SMIL (widely supported) -->
+            <animateTransform xlink:href="#acorn" attributeName="transform" type="translate" values="50,56;52,52;50,56" dur="1.2s" repeatCount="indefinite" />
+            <animateTransform xlink:href=".nut" attributeName="transform" type="rotate" from="0 0 8" to="6 0 8" dur="1.2s" repeatCount="indefinite" additive="sum" />
+          </g>
+        </svg>
+      </div> 
+    </div>
+  </div>
+
+      <div class="hint">Tip: To test now, open the console and run <code>window._testMidnight()</code></div>
+    </div>
+  </div>
+
+  <!-- celebration overlay -->
+  <div class="celebrate" id="celebrate" role="dialog" aria-modal="true" aria-hidden="true">
+    <canvas id="confetti" aria-hidden="true"></canvas>
+    <div class="message" id="celebrateMessage">
+      <h2>🎉 Happy Birthday Vidhu! 🎉</h2>
+      <p>From across the miles — may your day be full of dance, laughter, and adventures.</p>
+      <p class="spark">— <em> From Sher 🐯 </em> —</p>
+    </div>
+  </div>
+
+  <script>
+    // ======= countdown logic =======
+    function getNextMidnightLocal(){
+      const now = new Date();
+      // set to next midnight (start of next day) in local time
+      const next = new Date(now);
+      next.setHours(24,0,0,0);
+      return next;
+    }
+
+    const elHours = document.getElementById('hours');
+    const elMinutes = document.getElementById('minutes');
+    const elSeconds = document.getElementById('seconds');
+    const celebrate = document.getElementById('celebrate');
+
+    let target = getNextMidnightLocal();
+
+    function updateCountdown(){
+      const now = new Date();
+      const diff = target - now;
+      if (diff <= 0){
+        // show celebration once
+        triggerCelebration();
+        return; // stop countdown
+      }
+      const s = Math.floor(diff/1000) % 60;
+      const m = Math.floor(diff/1000/60) % 60;
+      const h = Math.floor(diff/1000/3600);
+      elHours.textContent = String(h).padStart(2,'0');
+      elMinutes.textContent = String(m).padStart(2,'0');
+      elSeconds.textContent = String(s).padStart(2,'0');
+    }
+
+    // run every 250ms to keep UI snappy
+    const ticker = setInterval(updateCountdown,250);
+    updateCountdown();
+
+    // ======= celebration visuals (simple confetti) =======
+    // adapted tiny confetti generator (no external libs)
+    const canvas = document.getElementById('confetti');
+    const ctx = canvas.getContext('2d');
+    let w = canvas.width = innerWidth;
+    let h = canvas.height = innerHeight;
+    let confettiPieces = [];
+
+    function onResize(){ w = canvas.width = innerWidth; h = canvas.height = innerHeight; }
+    addEventListener('resize', onResize);
+
+    function rand(min,max){return Math.random()*(max-min)+min}
+
+    function createPiece(){
+      return {
+        x: rand(0,w),
+        y: rand(-h,-20),
+        size: rand(6,14),
+        speed: rand(1,6),
+        rotation: rand(0,360),
+        rotationSpeed: rand(-8,8),
+        color: `hsl(${~~rand(0,360)},90%,60%)`,
+        shape: Math.random()>0.5? 'rect':'circ',
+      }
+    }
+
+    function spawnConfetti(count){
+      for(let i=0;i<count;i++) confettiPieces.push(createPiece());
+    }
+
+    function drawConfetti(){
+      ctx.clearRect(0,0,w,h);
+      for(let i=confettiPieces.length-1;i>=0;i--){
+        const p = confettiPieces[i];
+        p.y += p.speed;
+        p.x += Math.sin(p.y*0.01)*2;
+        p.rotation += p.rotationSpeed;
+        ctx.save();
+        ctx.translate(p.x,p.y);
+        ctx.rotate(p.rotation*Math.PI/180);
+        ctx.fillStyle = p.color;
+        if(p.shape==='rect') ctx.fillRect(-p.size/2,-p.size/2,p.size,p.size*0.6);
+        else{ ctx.beginPath(); ctx.arc(0,0,p.size/2,0,Math.PI*2); ctx.fill(); }
+        ctx.restore();
+        if(p.y > h + 40) confettiPieces.splice(i,1);
+      }
+    }
+
+    let confettiAnimId = null;
+    function runConfetti(){
+      if(confettiAnimId) cancelAnimationFrame(confettiAnimId);
+      (function loop(){ drawConfetti(); confettiAnimId = requestAnimationFrame(loop); })();
+    }
+
+    // small celebration audio (WebAudio) - short jingle
+    function playJingle(){
+      try{
+        const ctx = new (window.AudioContext||window.webkitAudioContext)();
+        const o1 = ctx.createOscillator();
+        const o2 = ctx.createOscillator();
+        const g = ctx.createGain();
+        o1.type='sine'; o2.type='triangle';
+        o1.frequency.value = 880; o2.frequency.value = 660;
+        g.gain.value = 0.0001;
+        o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+        const now = ctx.currentTime;
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.exponentialRampToValueAtTime(0.12, now+0.02);
+        o1.start(now); o2.start(now);
+        g.gain.exponentialRampToValueAtTime(0.0001, now+1.5);
+        o1.stop(now+1.6); o2.stop(now+1.6);
+      }catch(e){ /* audio not available */ }
+    }
+
+    // show overlay and start confetti/audios
+    let celebrated = false;
+    function triggerCelebration(){
+      if(celebrated) return; celebrated = true;
+      clearInterval(ticker);
+
+      // show overlay
+      celebrate.classList.add('show');
+      celebrate.setAttribute('aria-hidden','false');
+
+      try{
+        const sqWrap = document.querySelector('.squirrel-wrapper');
+        const popper = document.querySelector('#acorn');
+        const svg = document.querySelector('#squirrel');
+
+        // 1) squirrel reacts: eyes widen briefly
+        if(sqWrap) sqWrap.classList.add('wide');
+        // 2) small jump reaction after eyes widen
+        setTimeout(()=>{ if(sqWrap) sqWrap.classList.add('jump'); }, 140);
+        // remove jump quickly so idle resumes
+        setTimeout(()=>{ if(sqWrap) sqWrap.classList.remove('jump'); }, 560);
+
+        // 3) after reaction, run to stage and pop
+        setTimeout(()=>{
+          if(sqWrap) sqWrap.classList.add('to-stage');
+
+          // create a tiny spark element (SVG) and append to popper
+          if(popper){
+            try{
+              const svgns = 'http://www.w3.org/2000/svg';
+              const spark = document.createElementNS(svgns,'circle');
+              spark.setAttribute('cx', 0);
+              spark.setAttribute('cy', -6);
+              spark.setAttribute('r', 3);
+              spark.setAttribute('class', 'spark');
+              popper.appendChild(spark);
+            }catch(e){}
+            // flash spark shortly before full pop
+            setTimeout(()=>{ popper.classList.add('explode'); }, 420);
+          }
+
+          // after arrival, perform a little dance
+          setTimeout(()=>{ if(sqWrap) sqWrap.classList.add('stage-dance'); }, 1000);
+        }, 420);
+
+      }catch(e){/* ignore if not present */}
+
+      // spawn confetti and run
+      spawnConfetti(180);
+      runConfetti();
+      // keep spawning for a while
+      let waves = 0;
+      const waveInt = setInterval(()=>{ spawnConfetti(60); waves++; if(waves>6) clearInterval(waveInt); }, 700);
+      playJingle();
+    }
+
+    // provide test helper: call to simulate midnight (for easier verification)
+    window._testMidnight = function(){ target = new Date(Date.now()+1500); updateCountdown(); setTimeout(triggerCelebration,1600); };
+
+    // If the page loads after midnight (e.g., user opens it at 00:03), immediately trigger celebration
+    (function checkOnLoad(){
+      const now = new Date();
+      if(now >= target){ triggerCelebration(); }
+    })();
+
+  </script>
+
+  <!-- Deployment notes (copy this file as index.html to publish) -->
+  <!--
+    DEPLOY INSTRUCTIONS
+
+    Option A: GitHub Pages (quick)
+      1. Create a new repository on GitHub (public or private with GitHub Pages enabled).
+      2. Add this file as index.html at the repository root and push.
+      3. In repo Settings -> Pages -> Source: choose "Deploy from a branch" and select the branch (main) and root. Save.
+      4. Visit the provided github.io URL (it may take a minute to build).
+
+    Option B: Netlify Drag-and-Drop (instant)
+      1. Go to https://app.netlify.com/sites/new
+      2. Drag & drop this index.html file into the UI and it will be hosted immediately with a random subdomain.
+
+    Option C: Vercel
+      1. Sign into Vercel, create a new project pointing at the GitHub repo that contains this index.html.
+      2. Deploy; Vercel will serve it as a static site.
+
+    TESTING LOCALLY
+      - Open the file (index.html) in your browser. For local file restrictions, you may see limited audio in some browsers; use a local static server:
+        python3 -m http.server 8000
+        then open http://localhost:8000 in your browser.
+
+    CUSTOMIZATIONS
+      - To change the name in the greeting, look for the text "Happy Birthday Vidhu" in the celebrateMessage area and edit.
+      - To test immediately, open DevTools Console and run: window._testMidnight()
+
+  -->
+</body>
+</html>
