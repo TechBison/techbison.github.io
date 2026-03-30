@@ -3,125 +3,295 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Countdown Love</title>
+<title>Our Countdown ❤️</title>
 
 <style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
   body {
-    margin: 0;
-    background: linear-gradient(to bottom, #0f2027, #203a43, #2c5364);
-    color: white;
-    font-family: Arial, sans-serif;
-    text-align: center;
     overflow: hidden;
+    font-family: 'Segoe UI', sans-serif;
+    color: white;
+    background: radial-gradient(circle at 50% 80%, #1a1a2e 0%, #0f172a 40%, #020617 100%);
+    transition: transform 2s ease, filter 2s ease;
   }
 
+  /* 🌌 Stars */
+  .stars {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    z-index: -1;
+  }
+
+  .star {
+    position: absolute;
+    width: 2px;
+    height: 2px;
+    background: white;
+    opacity: 0.8;
+    animation: twinkle 3s infinite ease-in-out;
+  }
+
+  @keyframes twinkle {
+    0%,100% { opacity: 0.2; }
+    50% { opacity: 1; }
+  }
+
+  /* 🌙 Moon glow */
+  .moon {
+    position: absolute;
+    top: 10%;
+    right: 10%;
+    width: 80px;
+    height: 80px;
+    background: radial-gradient(circle, #fff, #ddd);
+    border-radius: 50%;
+    box-shadow: 0 0 40px rgba(255,255,255,0.6);
+    opacity: 0;
+    transition: opacity 2s ease;
+  }
+
+  .moon.show { opacity: 1; }
+
   h1 {
+    text-align: center;
     margin-top: 20px;
-    font-size: 2rem;
+    font-weight: 300;
+    letter-spacing: 2px;
   }
 
   #countdown {
+    text-align: center;
+    margin: 10px;
     font-size: 1.5rem;
-    margin-bottom: 40px;
+    opacity: 0.8;
   }
 
   .scene {
     position: relative;
-    width: 100%;
-    height: 60vh;
+    height: 70vh;
   }
 
   .person {
     position: absolute;
-    bottom: 50px;
-    font-size: 60px;
-    transition: left 1s linear;
+    bottom: 60px;
+    width: 120px;
+    transition: all 1s ease-in-out;
+    filter: drop-shadow(0 0 8px rgba(255,255,255,0.3));
   }
 
-  #person1 {
-    left: 10%;
+  #p1 { left: 5%; }
+  #p2 { left: 85%; }
+
+  .walking {
+    animation: walk 0.6s infinite alternate;
   }
 
-  #person2 {
-    left: 80%;
+  @keyframes walk {
+    from { transform: translateY(0); }
+    to { transform: translateY(-6px); }
   }
 
-  .heart {
+  .hug {
+    filter: drop-shadow(0 0 25px rgba(255,255,255,1));
+    transform: scale(1.15);
+  }
+
+  /* 💋 BIG cinematic kiss */
+  .kiss {
     position: absolute;
-    top: 40%;
+    top: 42%;
     left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 80px;
+    transform: translate(-50%, -50%) scale(0);
     opacity: 0;
-    transition: opacity 1s ease;
   }
 
-  .show-heart {
-    opacity: 1;
-    animation: pulse 1s infinite;
+  .kiss svg {
+    width: 160px;
+    height: 160px;
+    filter: drop-shadow(0 0 12px rgba(255,0,0,0.6));
   }
 
-  @keyframes pulse {
-    0% { transform: translate(-50%, -50%) scale(1); }
-    50% { transform: translate(-50%, -50%) scale(1.2); }
-    100% { transform: translate(-50%, -50%) scale(1); }
+  .kiss.show {
+    animation: kissPop 1.2s ease forwards;
   }
+
+  @keyframes kissPop {
+    0% { transform: translate(-50%, -50%) scale(0) rotate(-6deg); opacity: 0; }
+    40% { transform: translate(-50%, -50%) scale(1.4) rotate(-6deg); opacity: 1; }
+    70% { transform: translate(-50%, -50%) scale(1.25) rotate(-6deg); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.1) rotate(-6deg); opacity: 0; }
+  }
+    50% { transform: translate(-50%, -50%) scale(1.5); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1.2); }
+  }
+
+  /* ✨ particles burst */
+  .burst {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: pink;
+    border-radius: 50%;
+    opacity: 0;
+  }
+
 </style>
 </head>
 
 <body>
 
-<h1>Countdown to Us ❤️</h1>
+<div class="stars" id="stars"></div>
+<div class="moon" id="moon"></div>
+
+<h1>Counting Down to Us 💫</h1>
 <div id="countdown"></div>
 
 <div class="scene">
-  <div id="person1" class="person">🧍‍♂️</div>
-  <div id="person2" class="person">🧍‍♀️</div>
-  <div id="heart" class="heart">❤️</div>
+
+  <svg id="p1" class="person walking" viewBox="0 0 100 200">
+    <circle cx="50" cy="30" r="15" fill="white"/>
+    <line x1="50" y1="45" x2="50" y2="100" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="60" x2="30" y2="80" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="60" x2="70" y2="80" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="100" x2="35" y2="140" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="100" x2="65" y2="140" stroke="white" stroke-width="4"/>
+  </svg>
+
+  <svg id="p2" class="person walking" viewBox="0 0 100 200">
+    <circle cx="50" cy="30" r="15" fill="white"/>
+    <line x1="50" y1="45" x2="50" y2="100" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="60" x2="30" y2="80" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="60" x2="70" y2="80" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="100" x2="35" y2="140" stroke="white" stroke-width="4"/>
+    <line x1="50" y1="100" x2="65" y2="140" stroke="white" stroke-width="4"/>
+  </svg>
+
+  <div id="kiss" class="kiss">
+    <svg viewBox="0 0 200 120">
+      <defs>
+        <linearGradient id="lipGradTop" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff6b7a"/>
+          <stop offset="100%" stop-color="#d90429"/>
+        </linearGradient>
+        <linearGradient id="lipGradBottom" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ff4d6d"/>
+          <stop offset="100%" stop-color="#a30021"/>
+        </linearGradient>
+      </defs>
+      <!-- Upper lip with realistic curves -->
+      <path d="M20,60 C35,30 75,25 100,48 C125,25 165,30 180,60 C150,50 120,70 100,60 C80,70 50,50 20,60 Z" fill="url(#lipGradTop)"/>
+      <!-- Lower lip fuller -->
+      <path d="M20,60 C60,105 140,105 180,60 C150,95 50,95 20,60 Z" fill="url(#lipGradBottom)"/>
+      <!-- Highlight shine -->
+      <ellipse cx="80" cy="55" rx="18" ry="8" fill="white" opacity="0.25"/>
+      <ellipse cx="120" cy="58" rx="14" ry="6" fill="white" opacity="0.2"/>
+    </svg>
+  </div>
+
 </div>
 
 <script>
-  // 🔥 SET YOUR TARGET TIME HERE
-  const endTime = new Date("2026-04-01T00:00:00").getTime();
+  const endTime = new Date("2026-03-30T17:07:00").getTime();
   const startTime = new Date().getTime();
 
-  const person1 = document.getElementById("person1");
-  const person2 = document.getElementById("person2");
+  const p1 = document.getElementById("p1");
+  const p2 = document.getElementById("p2");
+  const kiss = document.getElementById("kiss");
   const countdown = document.getElementById("countdown");
-  const heart = document.getElementById("heart");
+  const moon = document.getElementById("moon");
+
+  const starsContainer = document.getElementById("stars");
+  for (let i = 0; i < 80; i++) {
+    const star = document.createElement("div");
+    star.className = "star";
+    star.style.left = Math.random() * 100 + "vw";
+    star.style.top = Math.random() * 100 + "vh";
+    star.style.animationDuration = (2 + Math.random() * 3) + "s";
+    starsContainer.appendChild(star);
+  }
+
+  function ease(t) {
+    return t * t * (3 - 2 * t);
+  }
+
+  function burstEffect() {
+    for (let i = 0; i < 20; i++) {
+      const b = document.createElement("div");
+      b.className = "burst";
+      b.style.left = "50%";
+      b.style.top = "42%";
+      document.body.appendChild(b);
+
+      const angle = Math.random() * 2 * Math.PI;
+      const dist = 100 + Math.random() * 100;
+
+      b.animate([
+        { transform: 'translate(-50%, -50%) scale(1)', opacity: 1 },
+        { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(0.5)`, opacity: 0 }
+      ], { duration: 1200, easing: 'ease-out' });
+    }
+  }
+
+  let finalStarted = false;
+
+  function startFinalSequence() {
+    if (finalStarted) return;
+    finalStarted = true;
+
+    countdown.innerHTML = "";
+
+    p1.style.left = "46%";
+    p2.style.left = "50%";
+
+    p1.classList.remove("walking");
+    p2.classList.remove("walking");
+
+    document.body.style.transform = "scale(1.1)";
+    document.body.style.filter = "brightness(1.15)";
+
+    moon.classList.add("show");
+
+    setTimeout(() => {
+      p1.classList.add("hug");
+      p2.classList.add("hug");
+    }, 800);
+
+    setTimeout(() => {
+      p1.style.transform = "rotate(-10deg) scale(1.2)";
+      p2.style.transform = "rotate(10deg) scale(1.2)";
+      kiss.classList.add("show");
+      burstEffect();
+    }, 1800);
+  }
 
   function update() {
-    const now = new Date().getTime();
-    const totalDuration = endTime - startTime;
-    const elapsed = now - startTime;
+    const now = Date.now();
+    let progress = (now - startTime) / (endTime - startTime);
+    progress = Math.min(progress, 1);
 
-    let progress = elapsed / totalDuration;
-    if (progress > 1) progress = 1;
+    const eased = ease(progress);
 
-    // Move people closer
-    const left1 = 10 + (35 * progress);   // moves from 10% → 45%
-    const left2 = 80 - (35 * progress);   // moves from 80% → 45%
+    const left1 = 5 + (40 * eased);
+    const left2 = 85 - (40 * eased);
 
-    person1.style.left = left1 + "%";
-    person2.style.left = left2 + "%";
+    p1.style.left = left1 + "%";
+    p2.style.left = left2 + "%";
 
-    // Countdown text
     const remaining = endTime - now;
 
     if (remaining <= 0) {
-      countdown.innerHTML = "Together Forever ❤️";
-      heart.classList.add("show-heart");
-
-      person1.innerHTML = "💑";
-      person2.style.display = "none";
+      startFinalSequence();
       return;
     }
 
-    const hours = Math.floor(remaining / (1000 * 60 * 60));
-    const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+    const h = Math.floor(remaining / (1000 * 60 * 60));
+    const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+    const s = Math.floor((remaining % (1000 * 60)) / 1000);
 
-    countdown.innerHTML = `${hours}h ${minutes}m ${seconds}s`;
+    countdown.innerHTML = `${h}h ${m}m ${s}s`;
   }
 
   setInterval(update, 1000);
